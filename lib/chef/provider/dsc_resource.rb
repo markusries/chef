@@ -61,8 +61,9 @@ class Chef
           a.block_action!
         end
         requirements.assert(:run) do |a|
-          a.assertion { dsc_refresh_mode_disabled? }
-          err = ["The LCM must have its RefreshMode set to Disabled. "]
+          a.assertion { supports_refresh_mode_enabled? || dsc_refresh_mode_disabled? }
+          err = ["The LCM must have its RefreshMode set to Disabled for" \
+                 " PowerShell versions before 5.0.10586.0."]
           a.failure_message Chef::Exceptions::ProviderNotFound, err.join(' ')
           a.whyrun err + ["Assuming a previous resource sets the RefreshMode."]
           a.block_action!
@@ -88,6 +89,10 @@ class Chef
       
       def dsc_refresh_mode_disabled?
         Chef::Platform.dsc_refresh_mode_disabled?(node)
+      end
+
+      def supports_refresh_mode_enabled?
+        Chef::Platform.supports_refresh_mode_enabled?(node)
       end
 
       def generate_description
