@@ -32,12 +32,14 @@ class Chef
         super
         @new_resource = new_resource
         @module_name = new_resource.module_name
+        @reboot_resource = nil
       end
 
       def action_run
         if ! test_resource
           converge_by(generate_description) do
             result = set_resource
+            invoke_reboot
           end
         end
       end
@@ -123,18 +125,14 @@ class Chef
         # however Invoke-DscResource is not correctly writing to that
         # stream and instead just dumping to stdout
         @converge_description = result.stdout
-
-        if result.return_value.is_a?(Array)
-          # WMF Feb 2015 Preview
-          result.return_value[0]["InDesiredState"]
-        else
-          # WMF April 2015 Preview
-          result.return_value["InDesiredState"]
-        end
+        return_dsc_resource_result(result, "InDesiredState")
       end
 
       def set_resource
         result = invoke_resource(:set)
+        if return_dsc_resource_result(result, 'RebootRequired') 
+          notify_reboot
+        end
         result.return_value
       end
 
@@ -155,6 +153,31 @@ class Chef
         cmdlet.run!
       end
 
+      def return_dsc_resource_result(result, property_name)
+        if result.return_value.is_a?(Array)
+          # WMF Feb 2015 Preview
+          result.return_value[0][property_name]
+        else
+          # WMF April 2015 Preview
+          result.return_value[property_name]
+        end
+      end
+
+      def notify_reboot
+        @reboot_resource = Chef::Resource::Reboot.new(
+          "Reboot for #{@new_resource.name}", 
+          run_context
+        ).tap do |r|
+          r.reason("Reboot for #{@new_resource.resource}.")
+        end
+      end
+
+      def invoke_reboot
+        unless @reboot_resource.nil?
+          Chef::Log.debug("Requesting node reboot with #{@new_resource.allow_reboot}")
+          @reboot_resource.run_action(@new_resource.allow_reboot)
+        end
+      end
     end
   end
 end

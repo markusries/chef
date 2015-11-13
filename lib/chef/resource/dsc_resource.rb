@@ -31,6 +31,7 @@ class Chef
         super
         @properties = {}
         @resource = nil
+        @allow_reboot = :nothing
       end
 
       def resource(value=nil)
@@ -65,6 +66,18 @@ class Chef
         @properties.reduce({}) do |memo, (k, v)|
           memo[k] = value_of(v)
           memo
+        end
+      end
+
+      # This property takes the action message for the reboot resource
+      # If the set method of the DSC resource indicate that a reboot
+      # is necessary, allow_reboot provides the mechanism for a reboot to 
+      # be requested.
+      def allow_reboot(value=nil)
+        if value
+          @allow_reboot = value
+        else
+          @allow_reboot
         end
       end
 

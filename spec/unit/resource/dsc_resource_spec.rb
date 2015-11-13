@@ -22,6 +22,7 @@ describe Chef::Resource::DscResource do
   let(:dsc_test_resource_name) { 'DSCTest' }
   let(:dsc_test_property_name) { :DSCTestProperty }
   let(:dsc_test_property_value) { 'DSCTestValue' }
+  let(:dsc_test_allow_reboot) { :reboot_now }
 
   context 'when Powershell supports Dsc' do
     let(:dsc_test_run_context) {
@@ -50,6 +51,11 @@ describe Chef::Resource::DscResource do
     it "allows the module_name attribute to be set" do
       dsc_test_resource.module_name(dsc_test_resource_name)
       expect(dsc_test_resource.module_name).to eq(dsc_test_resource_name)
+    end
+
+    it "allows the allow_reboot attribute to be set" do 
+      dsc_test_resource.allow_reboot(dsc_test_allow_reboot)
+      expect(dsc_test_resource.allow_reboot).to eq(dsc_test_allow_reboot)
     end
 
     context "when setting a dsc property" do
