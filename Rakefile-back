@@ -62,16 +62,4 @@ begin
 rescue LoadError
   puts "yard is not available. (sudo) gem install yard to generate yard documentation."
 end
-projects = %w[chef cookbooks ohai]
-chef = "#{ENV['HOME']}/projects/chef"
-
-desc 'Update local repositories from upstream'
-task :update do
-  projects.each do |p|
-    Dir.chdir('#{chef}/#{p}') do
-      sh 'git fetch chef'
-      sh 'git rebase chef/master master'
-    end
-  end
-end
 
